@@ -1,0 +1,42 @@
+version: '3'
+volumes:
+  vendor:
+services:
+  web:
+    container_name: web
+    build:
+      context: .
+      dockerfile: ./frontend/Dockerfile
+    volumes:
+      - ./frontend:/app
+    ports:
+      - '3000:8080'
+    tty: true
+    stdin_open: true
+    command: npm run serve
+  api:
+    container_name: api
+    build:
+      context: .
+      dockerfile: ./backend/Dockerfile
+    ports:
+      - "8080:8080"
+    tty: true
+    volumes:
+      - ./backend:/go/src/api
+    depends_on:
+      - 'db'
+  db:
+    container_name: mysql
+    build:
+      context: .
+      dockerfile: ./database/Dockerfile
+    ports:
+      - 3306:3306
+    env_file:
+      - ./database/.env
+    command: mysqld --character-set-server=utf8 --collation-server=utf8_unicode_ci --skip-character-set-client-handshake
+    volumes:
+      - "./database/mysql:/var/lib/mysql"
+      - "./database/my.conf:/etc/mysql/my.conf"
+      - "./database/init/:/docker-entrypoint-initdb.d"
